@@ -108,7 +108,7 @@ exports.create = async (req, res) => {
             phone_no: req.body.phone_no,
             sales_id: req.body.sales_id,
             sales_name: req.body.sales_name,
-            orderId: req.body.orderId || result,
+            orderId:  result,
             currentDate: new Date().toISOString(),
             deliveryDate: req.body.deliveryDate,
             note: req.body.note,
