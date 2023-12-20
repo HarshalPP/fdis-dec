@@ -48,8 +48,8 @@ const saleSchema = new Schema({
   },
   orderId:
   {
-    type: Number//,
-   // required: true
+    type: Number,
+   required: true
   },
   deliveryDate:
   {
