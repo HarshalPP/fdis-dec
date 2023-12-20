@@ -2,6 +2,8 @@ const jwt = require('jsonwebtoken');
 module.exports = function (req, res, next) {
   // Implement the middleware function based on the options object
   const bearerHeader = req.headers['authorization'];
+
+  console.log("bearerheader is",bearerHeader)
   // Check if bearer is undefined
   if (typeof bearerHeader !== 'undefined') {
     // Split at the space
