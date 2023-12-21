@@ -88,6 +88,7 @@ exports.login = async (req, res) => {
 
     // Find the user by username in the database
     const user = await Mobilelogin.findOne({ UserName ,Role});
+    console.log(user)
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -112,6 +113,7 @@ exports.login = async (req, res) => {
         token,
       },
     });
+
   } catch (err) {
     console.error('Error:', err);
     res.status(500).json({ message: 'Internal server error' });
