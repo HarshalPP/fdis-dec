@@ -79,9 +79,6 @@ exports.create = async (req, res) => {
 
 
 
-
-
-
 exports.login = async (req, res) => {
   try {
     const { UserName, Password , Role } = req.body;
@@ -110,7 +107,7 @@ exports.login = async (req, res) => {
         _id: user._id,
         UserName: user.UserName,
         Role:user.Role,
-        token,
+        // token,
       },
     });
 
@@ -119,3 +116,6 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+
+

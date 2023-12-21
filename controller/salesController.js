@@ -2,9 +2,10 @@ const sales = require("../models/sales");
 const salesorder = require("../models/sales");
 const mongoose = require('mongoose');
 const moment = require('moment');
-const {redisClient,isRedisConnected} = require('../config/redis')
+// const {redisClient,isRedisConnected} = require('../config/redis')
 var stock = require('../models/Stock_M');
 const { all } = require("../routes/sales");
+const redisClient = require('../config/redis');
 
 
 
@@ -87,6 +88,15 @@ const { all } = require("../routes/sales");
 
 
 
+// const redis = require('redis');
+// const redisClient = redis.createClient({
+//     host: '127.0.0.1',
+//     port: 6379,
+// });
+
+// redisClient.on('error', (error) => {
+//     console.error("Error in Redis configuration:", error);
+// });
 
 
 exports.create = async (req, res) => {
@@ -391,18 +401,125 @@ exports.delete = async(req, res) => {
 
 
     
-exports.allRecords = async(req, res) => {
-    // Rest of the code will go here
+// exports.allRecords = async(req, res) => {
+//     // Rest of the code will go here
+//     try {
+//         const resPerPage = 10; // results per page
+//         const page = req.params.page || 1; // Page 
+//         // const orderList = await salesorder.find().skip((resPerPage * page) - resPerPage).limit(resPerPage);  
+//         const orderList = await salesorder.find().sort({ '_id': -1 });
+//         res.json({ "status": 200, "msg": 'data has been fetched', res: orderList });
+//     } catch (err) {
+//         res.status(500).json({ message: err.message })
+//     }
+// }
+
+
+
+// const redis = require('redis');
+// const redisClient = redis.createClient({
+//     host: '127.0.0.1',
+//     port: 6379,
+// });
+
+// redisClient.on('error', (error) => {
+//     console.error("Error in Redis configuration:", error);
+// });
+
+// exports.allRecords = async (req, res) => {
+//     const key = "allUsers";
+
+//     try {
+//         if (!redisClient.connect) {
+//             console.error("Redis client is not connected");
+//             return res.status(500).json({ error: 'Internal Server Error' });
+//         }
+
+//         const getCachedData = () => {
+//             return new Promise((resolve, reject) => {
+//                 redisClient.get(key, (err, cachedData) => {
+//                     if (err) {
+//                         console.error(`Redis Error: ${err}`);
+//                         reject({ error: 'Internal Server Error' });
+//                     } else {
+//                         resolve(cachedData);
+//                     }
+//                 });
+//             });
+//         };
+
+//         const cachedData = await getCachedData();
+
+//         if (cachedData) {
+//             console.log('All Users data from cache', JSON.parse(cachedData));
+//             return res.json({ data: JSON.parse(cachedData) });
+//         }
+
+//         const allUsers = await salesorder.find();
+
+//         if (allUsers.length > 0) {
+//             // Store data in Redis with an expiration time (e.g., 1 hour)
+//             redisClient.setEx(key, 3600, JSON.stringify(allUsers));
+//             console.log('All Users from database', allUsers);
+//             return res.json({ data: allUsers });
+//         } else {
+//             console.log('No users found in the database');
+//             return res.status(404).json({ error: 'No Users found' });
+//         }
+//     } catch (error) {
+//         console.error('Unhandled Promise Rejection:', error);
+//         return res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// };
+
+
+
+exports.allRecords = async (req, res) => {
+    const key = "allUsers";
+
     try {
-        const resPerPage = 10; // results per page
-        const page = req.params.page || 1; // Page 
-        // const orderList = await salesorder.find().skip((resPerPage * page) - resPerPage).limit(resPerPage);  
-        const orderList = await salesorder.find().sort({ '_id': -1 });
-        res.json({ "status": 200, "msg": 'data has been fetched', res: orderList });
-    } catch (err) {
-        res.status(500).json({ message: err.message })
-    }
-}
+        if (!redisClient.connected) {
+            console.error("Redis client is not connected");
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+
+        const cachedData = await new Promise((resolve, reject) => {
+            redisClient.get(key, (err, cachedData) => {
+                if (err) {
+                    console.error(`Redis Error: ${err}`);
+                    reject({ error: 'Internal Server Error' });
+                } else {
+                    resolve(cachedData);
+                }
+            });
+        });
+
+        if (cachedData) {
+            console.log('All Users data from cache', JSON.parse(cachedData));
+            // No need to close the Redis client here
+            return res.json({ data: JSON.parse(cachedData) });
+        }
+
+        const allUsers = await salesorder.find();
+        console.log(allUsers)
+
+        if (allUsers.length > 0) {
+            // Store data in Redis with an expiration time (e.g., 1 hour)
+            redisClient.setex(key, 3600, JSON.stringify(allUsers));
+            console.log('All Users from database', allUsers);
+            // No need to close the Redis client here
+            return res.json({ data: allUsers });
+        } else {
+            console.log('No users found in the database');
+            // No need to close the Redis client here
+            return res.status(404).json({ error: 'No Users found' });
+        }
+    } catch (error) {
+        console.error('Unhandled Promise Rejection:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    } 
+};
+
 
 
 // exports.allRecords = async (req, res) => {
