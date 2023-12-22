@@ -64,10 +64,12 @@ const saleSchema = new Schema({
   {
     type: String
   },
-  orderstatus:
-  {
-    type:Number
+
+  orderstatus: {
+    type: String // Use an array if you want to allow both String and Number
   },
+
+  
   products: [
     {
     isOrderReady:

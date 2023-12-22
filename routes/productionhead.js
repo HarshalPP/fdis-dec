@@ -5,6 +5,8 @@ const token = require("../middleware/token");
 
 // Get All Route
 router.get("/", token,productionheadController.allRecords);
+
+router.get("/orderDetails",productionheadController.orderdetails)
 // Get One Route
 router.get("/get/:id",  productionheadController.get);
 // Create One Route
@@ -18,6 +20,10 @@ router.patch("/:id", async (req, res) => {
 });
 //Delete One
 router.delete("/delete/:id", token, productionheadController.delete);
+
+// for Order status
+
+router.patch('/checkorder/:id', productionheadController.checkorder);
 
 // token
 

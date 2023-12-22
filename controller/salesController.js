@@ -6,7 +6,12 @@ const moment = require('moment');
 var stock = require('../models/Stock_M');
 const { all } = require("../routes/sales");
 const redisClient = require('../config/redis');
+const eventEmitter = require('../utils/eventEmitter')
 
+
+eventEmitter.on('orderRejected',({salesPerson})=>{
+    console.log(`Notification: Order for salesperson ${salesPerson} is canceled. Notify Sales Manager.`);
+})
 
 
 
