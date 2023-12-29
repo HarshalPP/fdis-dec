@@ -16,8 +16,6 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-
-
 async function sendPushNotification(deviceToken, message) {
     const payload = {
       notification: {

@@ -28,6 +28,7 @@ const productionheadRouter = require("./routes/productionhead");
 const addStockRouter=require("./routes/addStock");
 const stockManager=require('./routes/stockManager')
 const mobileRouter=require('./routes/mobile')
+const Production_Incahrge=require('./routes/Production_Incharge')
 
 
 app.use("/admin", adminRouter);
@@ -40,6 +41,7 @@ app.use("/productionhead", productionheadRouter);
 app.use("/addstock",addStockRouter);
 app.use("/stockManager",stockManager)
 app.use("/mobile",mobileRouter)
+app.use("/Production_In", Production_Incahrge)
 
 // ------amit-------
 // Require routes
@@ -78,6 +80,7 @@ app.use("/current",current);
 const productImg = require("./routes/productImg");
 app.use("/images", productImg);
 const record = require("./routes/record");
+const Production_incharge = require("./models/Stock_M.js");
 app.use("/record", record);
 
 // Verify Token

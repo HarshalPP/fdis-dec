@@ -31,6 +31,9 @@ exports.checkorder = async (req, res) => {
       
       console.log('After Update:', result);
 
+      // Notify the sales manager about acceptance
+      await notifysalesManager(orderId, 'OrderAccepted');
+
       return res.status(200).json({ orderId: orderId, updatedData: result });
     } else if (decision === 'reject') {
       const salesPersonId = orderDetails.orderId;
@@ -42,7 +45,7 @@ exports.checkorder = async (req, res) => {
       console.log('After Update:', result);
 
       // Notify the sales manager about rejection
-      await notifysalesManager(salesPersonId);
+      await notifysalesManager(salesPersonId, 'OrderRejected');
 
       return res.status(200).json({ orderId: orderId, updatedData: result });
     } else {
@@ -54,7 +57,7 @@ exports.checkorder = async (req, res) => {
   }
 };
 
-async function notifysalesManager(orderId) {
+async function notifysalesManager(orderId, eventType) {
   try {
     // Use findOne to find the order details by orderId
     const orderDetails = await orderdetails.findOne({ orderId: orderId });
@@ -68,17 +71,18 @@ async function notifysalesManager(orderId) {
     const salesPersonId = orderDetails.sales_id;
     const salesPerson = await orderdetails.findOne({ sales_id: salesPersonId });
 
-    console.log("salesPerson data is",salesPerson);
+    console.log("salesPerson data is", salesPerson);
 
     if (salesPerson) {
-      
-      // Check if the fetched sales person has the same order_id as provided in the request
-      if (salesPerson.orderId === orderId) {
-        const dataEmit = eventEmitter.emit('OrderRejected',  { salesPerson });
+      // Emit the specific events based on the decision
+      if (eventType === 'OrderAccepted') {
+        const dataEmit = eventEmitter.emit('OrderAccepted', { salesPerson });
         console.log("data Emit is", dataEmit);
-        
+      } else if (eventType === 'OrderRejected') {
+        const dataEmit = eventEmitter.emit('OrderRejected', { salesPerson });
+        console.log("data Emit is", dataEmit);
       } else {
-        console.error('Sales person found, but order_id does not match:', orderId);
+        console.error('Invalid event type:', eventType);
       }
     } else {
       console.error('Sales person not found for salesPersonId:', salesPersonId);
