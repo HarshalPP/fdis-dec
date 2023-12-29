@@ -40,7 +40,7 @@ const saleSchema = new Schema({
   },
   //--------- order create-----------
   sales_id:{
-    type: String//,
+    type: Number//,
     //required: true
   },
   sales_name:{

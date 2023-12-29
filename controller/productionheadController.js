@@ -15,33 +15,33 @@ exports.checkorder = async (req, res) => {
     const decision = req.query.decision;
     const UpdateId = req.params.id;
 
-    // Find the order by orderId using aggregation
-    const ordercheck = await orderdetails.aggregate([
-      {
-        $match: { orderId: orderId }
-      }
-    ]);
+    // Find the order by orderId
+    const orderDetails = await orderdetails.findById(UpdateId);
 
-    console.log(ordercheck);
-
-    // Check if the ordercheck array is not empty
-    if (!ordercheck || ordercheck.length === 0) {
-      return res.status(404).json({ error: 'Order is not found' });
+    // Check if the orderDetails is not null
+    if (!orderDetails) {
+      return res.status(404).json({ error: 'Order not found' });
     }
 
-    const orderDetails = ordercheck[0]; // Assuming there's only one matching order
     if (decision === 'accept') {
       orderDetails.orderstatus = 'Accepted';
-    } else if (decision === 'reject') {
-      const salesPersonId = orderDetails.sales_id;
-      orderDetails.orderstatus = 'Rejected';
 
-      // Update the order status using aggregation
-      const result = await orderdetails.findOneAndUpdate({ _id: UpdateId }, { $set: { orderstatus: 'Rejected' } }, { new: true });
+      // Save the updated order status
+      const result = await orderDetails.save();
       
       console.log('After Update:', result);
 
-      // Notify the sales manager about rejection //
+      return res.status(200).json({ orderId: orderId, updatedData: result });
+    } else if (decision === 'reject') {
+      const salesPersonId = orderDetails.orderId;
+      orderDetails.orderstatus = 'Rejected';
+
+      // Save the updated order status
+      const result = await orderDetails.save();
+      
+      console.log('After Update:', result);
+
+      // Notify the sales manager about rejection
       await notifysalesManager(salesPersonId);
 
       return res.status(200).json({ orderId: orderId, updatedData: result });

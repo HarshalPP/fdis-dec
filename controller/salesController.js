@@ -9,7 +9,6 @@ const redisClient = require('../config/redis');
 
 const eventEmitter = require('../utils/eventEmitter');
 const admin = require('firebase-admin');
-
 const serviceAccount = require('../config/fcm.json');
 
 // Initialize Firebase Admin SDK
@@ -30,7 +29,6 @@ async function sendPushNotification(deviceToken, message) {
     try {
       // Send FCM notification
       const response = await admin.messaging().sendToDevice(deviceToken, payload);
-  
       // Log success or error
       if (response.results && response.results.length > 0) {
         const firstResult = response.results[0];
@@ -64,6 +62,9 @@ eventEmitter.on('OrderRejected', async ({ salesPerson }) => {
     console.error('Error handling OrderRejected event:', error);
   }
 });
+
+
+
 
 
 // const eventEmitter = require('../utils/eventEmitter');
