@@ -6,12 +6,178 @@ const moment = require('moment');
 var stock = require('../models/Stock_M');
 const { all } = require("../routes/sales");
 const redisClient = require('../config/redis');
-const eventEmitter = require('../utils/eventEmitter')
+
+const eventEmitter = require('../utils/eventEmitter');
+const admin = require('firebase-admin');
+
+const serviceAccount = require('../config/fcm.json');
+
+// Initialize Firebase Admin SDK
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
 
-eventEmitter.on('orderRejected',({salesPerson})=>{
-    console.log(`Notification: Order for salesperson ${salesPerson} is canceled. Notify Sales Manager.`);
-})
+
+async function sendPushNotification(deviceToken, message) {
+    const payload = {
+      notification: {
+        title: 'Order Rejected',
+        body: message,
+      },
+    };
+  
+    try {
+      // Send FCM notification
+      const response = await admin.messaging().sendToDevice(deviceToken, payload);
+  
+      // Log success or error
+      if (response.results && response.results.length > 0) {
+        const firstResult = response.results[0];
+        if (firstResult.error) {
+          console.error('FCM notification failed:', firstResult.error);
+        } else {
+          console.log('FCM notification sent successfully:', response);
+        }
+      }
+    } catch (error) {
+      console.error('Error sending FCM notification:', error);
+    }
+  }
+  
+
+// Listen for 'OrderRejected' event
+eventEmitter.on('OrderRejected', async ({ salesPerson }) => {
+  try {
+    const { sales_name, sales_id } = salesPerson;
+    const deviceToken = 'token';
+
+    console.log(`Notification: Order for salesperson -->> ${sales_id} and  --> ${sales_name} is canceled. Notify Sales Manager.`);
+
+    // Additional logic related to notifying the sales manager can be added here
+
+
+    // Send FCM notification
+    const message = `Order for salesperson ${sales_id} and ${sales_name} is canceled. Notify Sales Manager.`;
+    await sendPushNotification(deviceToken, message);
+  } catch (error) {
+    console.error('Error handling OrderRejected event:', error);
+  }
+});
+
+
+// const eventEmitter = require('../utils/eventEmitter');
+// const admin=require("firebase-admin")
+// const fcm=require("fcm-notification")
+// const serviceAccount=require('../config/fcm.json')
+// const certPath=admin.credential.cert(serviceAccount)
+// const FCM = new fcm(certPath)
+// const admin = require('firebase-admin');
+// require('dotenv').config();
+
+// // Use the GOOGLE_APPLICATION_CREDENTIALS environment variable
+// process.env.GOOGLE_APPLICATION_CREDENTIALS = 'C:\\Users\\dear\\Desktop\\vss-dec\\inner-radius-401719-firebase-adminsdk-hl4z0-6c5ad46056.json';
+
+
+// admin.initializeApp({
+//   credential: admin.credential.applicationDefault(),
+//   projectId: 'inner-redius-401719', // Replace with your actual project ID
+// });
+
+// async function sendPushNotification(deviceToken, message) {
+//   const payload = {
+//     notification: {
+//       title: 'Order Rejected',
+//       body: message,
+//     },
+//   };
+
+//   try {
+//     // Send push notification
+//     await admin.messaging().sendToDevice(deviceToken, payload);
+//     console.log(`Push notification sent successfully to device with token: ${deviceToken}`);
+//   } catch (error) {
+//     console.error('Error sending push notification:', error);
+//   }
+// }
+
+// eventEmitter.on('OrderRejected', async ({ salesPerson }) => {
+//   try {
+//     const { sales_name, sales_id } = salesPerson;
+//     const deviceToken = 'xz'; // Replace with the actual device token from the mobile app
+
+//     console.log(`Notification: Order for salesperson -->> ${sales_id} and  --> ${sales_name} is canceled. Notify Sales Manager.`);
+
+//     // Additional logic related to notifying the sales manager can be added here
+
+//     // Send push notification
+//     const message = `Order for salesperson ${sales_id} and ${sales_name} is canceled. Notify Sales Manager.`;
+//     await sendPushNotification(deviceToken, message);
+//   } catch (error) {
+//     console.error('Error handling OrderRejected event:', error);
+//   }
+// });
+
+// const eventEmitter = require('../utils/eventEmitter') 
+// require('dotenv').config()
+// // constc heckorder=require("../controller/productionheadController")
+// // Another file
+
+// const {initializeApp,applicationDefault} = require('firebase-admin/app');
+// const {getMessage} = require('firebase-admin/messaging');
+// const { application } = require("express");
+
+// process.env.GOOGLE_APPLICATION_CREDENTIALS
+
+// initializeApp({
+// Credential:applicationDefault(),
+// projectId:'inner-redius-401719'
+// });
+
+// async function sendPushNotification(deviceToken, message) {
+//   const payload = {
+//     notification: {
+//       title: 'Order Rejected',
+//       body: message,
+//     },
+//   };
+
+//   await admin.messaging().sendToDevice(deviceToken, payload);
+// }
+
+// eventEmitter.on('OrderRejected', async ({ salesPerson }) => {
+//   try {
+//     const { sales_name, sales_id, deviceToken } = salesPerson;
+
+//     console.log(`Notification: Order for salesperson -->> ${sales_id} and  --> ${sales_name} is canceled. Notify Sales Manager.`);
+
+//     // Additional logic related to notifying the sales manager can be added here
+
+//     // Send push notification
+//     const message = `Order for salesperson ${sales_id} and ${sales_name} is canceled. Notify Sales Manager.`;
+//     await sendPushNotification(deviceToken, message);
+//   } catch (error) {
+//     console.error('Error handling OrderRejected event:', error);
+//   }
+// });
+
+
+
+
+// eventEmitter.on('OrderRejected', async ({ salesPerson }) => {
+//   try {
+//     const{sales_name,sales_id}=salesPerson
+//     // await notifysalesManager(checkorder.salesPerson);
+//     console.log(`Notification: Order for salesperson -->> ${sales_id} and  --> ${sales_name} is canceled. Notify Sales Manager.`);
+//     // Additional logic related to notifying the sales manager can be added here
+//   } catch (error) {
+//     console.error('Error handling OrderRejected event:', error);
+//   }
+// });
+
+
+
+
 
 
 
@@ -306,85 +472,120 @@ exports.get = async(req, res) => {
         }
         
     }
-    // put one
-exports.edit = async(req, res) => {
-    try {
-        //update record from collection            
-        var updatedUser;
-        var status = "0";
-        switch (req.body.updateType)
-        {
-            case 'batchUpdate':
-                updatedUser = await salesorder.findOneAndUpdate({
-                    _id: new mongoose.Types.ObjectId(req.params.id),
-                    "products.productId": req.body.pid
-                }, { $set: { "products.$.batch_list": req.body.products.batch_list, "orderstatus": "2" }},{multi: true });
-                status = "2";
-                break;
 
-            case 'productionInUpdate':
-                updatedUser = await salesorder.findOneAndUpdate({
-                    _id: new mongoose.Types.ObjectId(req.params.id),
-                    "products.productId": req.body.pid
-                    }, {
-                    $set: {
-                        "products.$.pIn_id": req.body.products.pIn_id,
+              // Update salesOrder //
 
-                        "products.$.productionincharge": req.body.products.productionincharge,
-                        "products.$.assignDate": req.body.products.assignDate,
-                        "products.$.completionDate": req.body.products.completionDate,
-                        "products.$.phNote": req.body.products.phNote,
-                        "orderstatus": "1"
-                    }
-                }, { multi: true });
-                status = "1";
-                break;
-            
-            case 'SalesManager':
-                updatedUser = await salesorder.findOneAndUpdate(
-                    {_id: new mongoose.Types.ObjectId(req.params.id)}, { $set: {
-                        clientName: req.body.clientName,
-                        firmName: req.body.firmName,
-                        address: req.body.address,
-                        city: req.body.city,
-                        phone_no: req.body.phone_no,
-                        sales_id: req.body.sales_id,
-                        sales_name: req.body.sales_name,
-                        orderId: req.body.orderId,
-                        currentDate: new Date().toISOString(),
-                        deliveryDate: req.body.deliveryDate,
-                        note: req.body.note,
-                        products: req.body.products,
-                        ph_id: req.body.ph_id,
-                        ph_name: req.body.ph_name,
-                        process_bar: req.body.process_bar,
-                        smName: req.body.smName,
-                        vehicleNum: req.body.vehicleNum,
-                        dpDate: req.body.dpDate,
-                        dpRecieved: req.body.dpRecieved,
-                        dpPhone: req.body.dpPhone,
-                        dpTotalWeight: req.body.dpTotalWeight,
-                        "orderstatus": "0" }},{multi: true });
-                status = "0";
-               
-            break;  
-            default:
-                updatedUser = await salesorder.findById(req.params.id).exec();
-                updatedUser.set(req.body);
-                const updateSalesorder = await updatedUser.save();
-                status = "3";
-        }
-        var updStatus = await salesorder.findById(req.params.id).exec();
-        updStatus.set({ 'orderstatus': status });
-        await updStatus.save();
+        
+              exports.edit = async (req, res) => {
+                  try {
+                      const findsalesOrder = await salesorder.findById(req.params.id);
+                      if (findsalesOrder) {
+                          const updatesalesOrder = await salesorder.findByIdAndUpdate(req.params.id, req.body, { new: true });
+                          // Use { new: true } to get the updated document as a result
+              
+                          console.log(updatesalesOrder);
+                          res.status(200).json({
+                            updatedData:updatesalesOrder
+                          });
+                      } else {
+                          res.status(404).json("Sales order not found");
+                      }
+                  } catch (error) {
+                      console.error(error);
+                      res.status(500).json("Data is not updated");
+                  }
+              };
+              
+    
+    // // put one
+    // exports.edit = async (req, res) => {
+    //     try {
+    //         // Update record from collection
+    //         var updatedUser;
+    //         var status = "0";
+    
+    //         switch (req.body.updateType) {
+    //             case 'batchUpdate':
+    //                 updatedUser = await salesorder.findOneAndUpdate({
+    //                     _id: new mongoose.Types.ObjectId(req.params.id),
+    //                     "products.productId": req.body.pid
+    //                 }, {
+    //                     $set: {
+    //                         "products.$.batch_list": req.body.products.batch_list,
+    //                         "orderstatus": "2"
+    //                     }
+    //                 }, { multi: true });
+    //                 status = "2";
+    //                 break;
+    
+    //             case 'productionInUpdate':
+    //                 updatedUser = await salesorder.findOneAndUpdate({
+    //                     _id: new mongoose.Types.ObjectId(req.params.id),
+    //                     "products.productId": req.body.pid
+    //                 }, {
+    //                     $set: {
+    //                         "products.$.pIn_id": req.body.products.pIn_id,
+    //                         "products.$.productionincharge": req.body.products.productionincharge,
+    //                         "products.$.assignDate": req.body.products.assignDate,
+    //                         "products.$.completionDate": req.body.products.completionDate,
+    //                         "products.$.phNote": req.body.products.phNote,
+    //                         "orderstatus": "1"
+    //                     }
+    //                 }, { multi: true });
+    //                 status = "1";
+    //                 break;
+    
+    //             case 'SalesManager':
+    //                 updatedUser = await salesorder.findOneAndUpdate(
+    //                     { _id: new mongoose.Types.ObjectId(req.params.id) },
+    //                     {
+    //                         $set: {
+    //                             clientName: req.body.clientName,
+    //                             firmName: req.body.firmName,
+    //                             address: req.body.address,
+    //                             city: req.body.city,
+    //                             phone_no: req.body.phone_no,
+    //                             sales_id: req.body.sales_id,
+    //                             sales_name: req.body.sales_name,
+    //                             orderId: req.body.orderId,
+    //                             currentDate: new Date().toISOString(),
+    //                             deliveryDate: req.body.deliveryDate,
+    //                             note: req.body.note,
+    //                             products: req.body.products,
+    //                             ph_id: req.body.ph_id,
+    //                             ph_name: req.body.ph_name,
+    //                             process_bar: req.body.process_bar,
+    //                             smName: req.body.smName,
+    //                             vehicleNum: req.body.vehicleNum,
+    //                             dpDate: req.body.dpDate,
+    //                             dpRecieved: req.body.dpRecieved,
+    //                             dpPhone: req.body.dpPhone,
+    //                             dpTotalWeight: req.body.dpTotalWeight,
+    //                             "orderstatus": "0"
+    //                         }
+    //                     }, { multi: true }
+    //                 );
+    //                 status = "0";
+    //                 break;
+    
+    //             default:
+    //                 updatedUser = await salesorder.findOneAndUpdate(req.params.id, req.body, { new: true });
+    //                 status = "3";
+    //                 console.log(updatedUser)
+    //         }
+    
+    //         var updStatus = await salesorder.findById(req.params.id).exec();
+    //         updStatus.set({ 'orderstatus': status });
+    //         await updStatus.save();
+    
+    //         updatedUser = await salesorder.findById(req.params.id);
+    //         res.status(201).json({ "status": 200, "msg": 'record successfully updated', res: updatedUser });
+    
+    //     } catch (err) {
+    //         res.status(400).json({ message: err.message });
+    //     }
+    // };
 
-        updatedUser = await salesorder.findById(req.params.id);
-        res.status(201).json({ "status": 200, "msg": 'record sucessfully updated', res: updatedUser });
-
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
-}
 
 // delete
 exports.delete = async(req, res) => {

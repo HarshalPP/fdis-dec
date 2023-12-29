@@ -11,6 +11,7 @@
   "author": "pratima",
   "license": "ISC",
   "dependencies": {
+    "@grpc/grpc-js": "^1.9.13",
     "@types/jest": "^29.5.0",
     "aws-sdk": "^2.1464.0",
     "bcrypt": "^5.1.0",
@@ -19,6 +20,8 @@
     "date-fns": "^0.8.0",
     "dotenv": "^8.6.0",
     "express-session": "^1.17.3",
+    "fcm-node": "^1.6.1",
+    "firebase-admin": "^12.0.0",
     "iconv-lite": "^0.6.3",
     "isodate": "^0.1.4",
     "jsonwebtoken": "^8.5.1",

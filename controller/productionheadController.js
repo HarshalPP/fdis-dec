@@ -38,6 +38,7 @@ exports.checkorder = async (req, res) => {
 
       // Update the order status using aggregation
       const result = await orderdetails.findOneAndUpdate({ _id: UpdateId }, { $set: { orderstatus: 'Rejected' } }, { new: true });
+      
       console.log('After Update:', result);
 
       // Notify the sales manager about rejection //
@@ -67,13 +68,15 @@ async function notifysalesManager(orderId) {
     const salesPersonId = orderDetails.sales_id;
     const salesPerson = await orderdetails.findOne({ sales_id: salesPersonId });
 
-    console.log(salesPerson);
+    console.log("salesPerson data is",salesPerson);
 
     if (salesPerson) {
+      
       // Check if the fetched sales person has the same order_id as provided in the request
       if (salesPerson.orderId === orderId) {
-        const dataEmit = eventEmitter.emit('OrderRejected', salesPerson);
+        const dataEmit = eventEmitter.emit('OrderRejected',  { salesPerson });
         console.log("data Emit is", dataEmit);
+        
       } else {
         console.error('Sales person found, but order_id does not match:', orderId);
       }
@@ -84,6 +87,8 @@ async function notifysalesManager(orderId) {
     console.error('Error notifying Sales Manager:', error);
   }
 }
+
+
 
       
       
