@@ -5,9 +5,10 @@ const mongoose  = require('mongoose');
 const { notify } = require("../routes/productionhead");
 const sales = require("../models/sales");
 const eventEmitter = require("../utils/eventEmitter");
+const SalesManager=require('../models/sales')
 
 
-//create
+      // To Accept order and Reject the orders //
 
 exports.checkorder = async (req, res) => {
   try {
@@ -93,6 +94,22 @@ async function notifysalesManager(orderId, eventType) {
 }
 
 
+exports.checkOrderDetails=async(req,res)=>{
+  try{
+    const finddetails=await SalesManager.find({})
+    res.status(200).json({
+      message:'Order Details is shows',
+      orderdetails:finddetails
+    })
+  }
+  catch(error){
+  res.status(500).json({
+    message:'OrderDetails is not found',
+    Error:error
+  })
+  }
+}
+
 
       
       
@@ -113,6 +130,7 @@ exports.create = async (req, res) => {
         res.status(400).json({ message: err.message });
     }
 }
+
 
 exports.orderdetails = async(req,res)=>{
     try{

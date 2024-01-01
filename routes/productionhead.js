@@ -7,6 +7,8 @@ const token = require("../middleware/token");
 router.get("/", token,productionheadController.allRecords);
 
 router.get("/orderDetails",productionheadController.orderdetails)
+
+router.get("/order",productionheadController.checkOrderDetails)
 // Get One Route
 router.get("/get/:id",  productionheadController.get);
 // Create One Route
