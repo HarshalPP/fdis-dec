@@ -10,7 +10,7 @@ router.get("/get/:id", token, salesController.get);
 
 router.get("/availableStock", token, salesController.availableStock);
 // Create One Route
-router.post("/create", token, salesController.create);
+router.post("/create",  salesController.create);
 //Put One
 router.put("/edit/:id", token, salesController.edit);
 // Edit One Route PATCH version
